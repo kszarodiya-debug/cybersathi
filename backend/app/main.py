@@ -1,8 +1,12 @@
 """FastAPI application entry point for CyberSathi."""
 
+from contextlib import asynccontextmanager
 import logging
+from pathlib import Path
 from uuid import uuid4
 
+from alembic import command
+from alembic.config import Config
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -15,10 +19,24 @@ from app.schemas.health import HealthResponse
 logger = logging.getLogger("cybersathi.api")
 
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Apply production migrations before accepting application traffic."""
+
+    if settings.app_env == "production":
+        backend_root = Path(__file__).resolve().parents[1]
+        alembic_config = Config(str(backend_root / "alembic.ini"))
+        logger.info("Applying database migrations before startup")
+        command.upgrade(alembic_config, "head")
+        logger.info("Database migrations completed")
+    yield
+
+
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="Backend foundation for the CyberSathi awareness platform.",
+    lifespan=lifespan,
     docs_url=None if settings.app_env == "production" else "/docs",
     redoc_url=None if settings.app_env == "production" else "/redoc",
     openapi_url=None if settings.app_env == "production" else "/openapi.json",
