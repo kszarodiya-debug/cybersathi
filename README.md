@@ -2,6 +2,10 @@
 
 ## AI Cybersecurity Awareness Assistant
 
+Project owner: **Kunal Sanjay Zarodiya**
+
+Follow the project owner on [Instagram](https://www.instagram.com/kunal_zarodiya?igsi=MXJraHB6aGkxM2x6dw==).
+
 CyberSathi is a college-focused cybersecurity awareness platform for students, faculty, and administrators. It combines practical learning, defensive analysis tools, quizzes, incident reporting, awareness scoring, and a safety-bounded AI assistant.
 
 ## Features
