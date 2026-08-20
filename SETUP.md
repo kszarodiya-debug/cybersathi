@@ -67,6 +67,8 @@ Apply the schema from `backend/`:
 alembic upgrade head
 ```
 
+The hosted Render deployment is configured with the same migration head and runs `alembic upgrade head` before starting the production API.
+
 For a migration review without a live database:
 
 ```powershell

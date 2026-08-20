@@ -1,6 +1,13 @@
-# CyberSathi deployment preparation
+# CyberSathi deployment
 
-This repository does not contain deployment credentials, infrastructure accounts, certificates, provider keys, or a deployment URL. The instructions below are provider-neutral and must be adapted to the chosen hosting platform.
+CyberSathi is deployed using GitHub Pages for the frontend and Render for the FastAPI backend and PostgreSQL database. Credentials remain in provider-managed secret storage and are not committed to this repository.
+
+Live services:
+
+- Frontend: https://kszarodiya-debug.github.io/cybersathi/
+- Backend: https://cybersathi-2bao.onrender.com
+- Health: https://cybersathi-2bao.onrender.com/api/v1/health
+- Repository: https://github.com/kszarodiya-debug/cybersathi
 
 ## Required production configuration
 
@@ -21,11 +28,11 @@ Do not put backend secrets in frontend build variables. Do not commit `.env`, `.
 
 1. Provision a private PostgreSQL database and least-privilege application role.
 2. Configure `DATABASE_URL` through the secret manager.
-3. Run `alembic upgrade head` as a controlled release job from the backend image/environment.
+3. Run `alembic upgrade head` from the backend image/environment. The current Render Free deployment runs this command at application startup because pre-deploy commands are unavailable on that plan.
 4. Verify the migration head and application health.
 5. Encrypt backups and define retention/deletion policies for chat, analysis, incident, and audit data.
 
-The application does not migrate automatically at startup. This prevents an application request from becoming a schema-changing operation.
+The production startup migration is fail-closed: if migration fails, the service does not accept application traffic. For a paid production deployment, move migrations to a dedicated pre-deploy or release job.
 
 ## Backend release sequence
 
@@ -51,6 +58,22 @@ pnpm run build
 
 Publish `frontend/dist/` using the selected static hosting provider. Configure the real API origin at build time through `VITE_API_BASE_URL`. Configure the static host or reverse proxy to provide HTTPS, a restrictive Content Security Policy, clickjacking protection, MIME sniffing protection, and appropriate cache rules for HTML versus hashed assets.
 
+The GitHub Pages workflow sets `VITE_BASE_PATH` for the project site and reads the repository variable `VITE_API_BASE_URL`. The current variable points to the Render API above.
+
+## Render configuration
+
+The deployed Render web service uses:
+
+```text
+Root directory: backend
+Build command: pip install -r requirements.txt
+Start command: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+Plan: Free
+Region: Virginia (US East)
+```
+
+Private Render environment variables include `DATABASE_URL`, `JWT_SECRET`, `APP_ENV=production`, and `FRONTEND_ORIGINS=https://kszarodiya-debug.github.io`. Add `AI_API_KEY` in Render to enable provider-backed assistant responses; do not place it in GitHub or frontend variables.
+
 ## Post-deployment smoke checks
 
 Verify without using real student or secret data:
@@ -72,18 +95,15 @@ Monitor 401/403/404/429/5xx rates, authentication failures, migration failures, 
 
 Prepare key rotation procedures for `JWT_SECRET`, provider credentials, database credentials, and TLS certificates. JWT secret rotation invalidates existing tokens when the signing key changes; an account-wide token-version strategy can be added if emergency selective revocation is required.
 
-## GitHub preparation
+## GitHub and Pages
 
-The current workspace is not initialized as a Git repository. After reviewing the files and confirming no secrets are present:
+The repository and Pages workflow are already configured. Future changes can be published with:
 
 ```powershell
-git init
-git branch -M main
 git add .
 git status
-git commit -m "Prepare CyberSathi for deployment"
-git remote add origin <YOUR_GITHUB_REPOSITORY_URL>
-git push -u origin main
+git commit -m "describe the change"
+git push origin main
 ```
 
-Replace the placeholder remote only after creating or selecting the intended repository. No deployment URL is assumed by this project.
+GitHub Actions redeploys the frontend after workflow runs. Keep `.env`, provider credentials, database URLs, and API keys out of Git.

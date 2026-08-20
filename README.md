@@ -90,13 +90,13 @@ Start PostgreSQL using an approved local installation or the supplied Compose fi
 docker compose --env-file .env up -d postgres
 ```
 
-From `backend/`, apply migrations explicitly:
+From `backend/`, apply migrations explicitly for local development:
 
 ```powershell
 alembic upgrade head
 ```
 
-The current migration head is `20260820_0008`. The application does not mutate the schema automatically at startup.
+The current migration head is `20260820_0008`. In the Render production deployment, the backend applies migrations before accepting traffic because the free Render tier does not provide a pre-deploy command.
 
 ## Running the backend
 
@@ -152,7 +152,15 @@ The final verification run passed 42 backend tests, 4 frontend tests, frontend l
 
 ## Deployment
 
-Use [DEPLOYMENT.md](DEPLOYMENT.md) for the production checklist. Deployment credentials, infrastructure, domain names, TLS certificates, AI provider keys, database instances, and hosting URLs are intentionally not included in this repository.
+Current deployment:
+
+- Frontend: [GitHub Pages](https://kszarodiya-debug.github.io/cybersathi/)
+- Backend API: [Render](https://cybersathi-2bao.onrender.com)
+- API health: [https://cybersathi-2bao.onrender.com/api/v1/health](https://cybersathi-2bao.onrender.com/api/v1/health)
+- Database: Render PostgreSQL service `cybersathi-db` on the Free plan
+- Pages workflow: `.github/workflows/deploy-pages.yml`
+
+The Render Free plan is suitable for testing and may sleep or expire. Configure `AI_API_KEY` privately in Render to enable the AI assistant. See [DEPLOYMENT.md](DEPLOYMENT.md) for the production checklist and provider configuration.
 
 ## Security considerations
 
@@ -166,4 +174,4 @@ Use [DEPLOYMENT.md](DEPLOYMENT.md) for the production checklist. Deployment cred
 
 ## GitHub preparation
 
-The current workspace is not initialized as a Git repository. After reviewing local changes, use the commands in [DEPLOYMENT.md](DEPLOYMENT.md) to initialize a repository, add a remote, commit, and push. Verify `.gitignore` excludes `.env`, build output, caches, and dependency directories before committing.
+The project is published at [github.com/kszarodiya-debug/cybersathi](https://github.com/kszarodiya-debug/cybersathi). Future changes pushed to `main` automatically rebuild the GitHub Pages frontend. Render deployments are currently triggered manually because the public-repository service is configured on the Free plan.
