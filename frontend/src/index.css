@@ -31,6 +31,33 @@ textarea {
   mask-image: linear-gradient(to bottom, black, transparent 80%);
 }
 
+@keyframes instagram-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.18), 0 0 22px rgba(236, 72, 153, 0.42);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(236, 72, 153, 0), 0 0 28px rgba(236, 72, 153, 0.55);
+    transform: scale(1.04);
+  }
+}
+
+.instagram-pulse {
+  animation: instagram-pulse 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .instagram-pulse {
+    animation: none;
+  }
+}
+
 ::selection {
   background: #f6b73c;
   color: #10233f;
