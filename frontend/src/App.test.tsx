@@ -12,6 +12,7 @@ describe('CyberSathi landing page', () => {
     )
 
     expect(screen.getByRole('heading', { name: /your digital safety companion/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /cybersathi home/i })).toHaveLength(2)
     expect(screen.getByText(/Built for safer campuses/i)).toBeInTheDocument()
     expect(screen.getByText(/Pause\. Verify\. Protect\./i)).toBeInTheDocument()
     expect(screen.getByText('Kunal S. Zarodiya')).toBeInTheDocument()

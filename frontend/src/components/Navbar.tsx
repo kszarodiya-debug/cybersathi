@@ -24,9 +24,9 @@ export function Navbar() {
   return (
     <header className="relative z-40 border-b border-ink/10 bg-mist/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-8">
-        <Link className="flex items-center gap-3" to="/" onClick={closeMenu}>
+        <Link className="flex items-center gap-3" to="/" onClick={closeMenu} aria-label="CyberSathi home">
           <span className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-lg font-black text-white shadow-lg shadow-ink/15" aria-hidden="true">C</span>
-          <span className="text-base font-black tracking-[0.12em] text-ink">CYBERSATHI</span>
+          <span className="text-base font-black tracking-[0.12em] text-ink">YBERSATHI</span>
         </Link>
 
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary navigation">

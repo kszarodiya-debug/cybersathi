@@ -86,6 +86,8 @@ Replace every placeholder secret in `backend/.env`. Never commit either `.env` f
 
 Backend variables are documented in [SETUP.md](SETUP.md), including `DATABASE_URL`, `JWT_SECRET`, `JWT_ISSUER`, `JWT_AUDIENCE`, `FRONTEND_ORIGINS`, rate limits, and optional AI-provider settings. The frontend uses `VITE_API_BASE_URL` only; it must never contain an API key or database credential.
 
+The designated administrator is provisioned separately with the one-time `python -m app.bootstrap_admin` command using backend-only `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` values. Public registration cannot select an elevated role.
+
 ## Database setup
 
 Start PostgreSQL using an approved local installation or the supplied Compose file:
@@ -100,7 +102,7 @@ From `backend/`, apply migrations explicitly for local development:
 alembic upgrade head
 ```
 
-The current migration head is `20260820_0008`. In the Render production deployment, the backend applies migrations before accepting traffic because the free Render tier does not provide a pre-deploy command.
+The current migration head is `20260822_0009`. In the Render production deployment, the backend applies migrations before accepting traffic because the free Render tier does not provide a pre-deploy command.
 
 ## Running the backend
 

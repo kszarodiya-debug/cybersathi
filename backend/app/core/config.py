@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import EmailStr, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -102,6 +102,10 @@ class Settings(BaseSettings):
     frontend_origins_raw: str = Field(
         default="http://localhost:5173", validation_alias="FRONTEND_ORIGINS"
     )
+    admin_email: EmailStr | None = Field(default=None, validation_alias="ADMIN_EMAIL")
+    admin_initial_password: SecretStr | None = Field(
+        default=None, validation_alias="ADMIN_INITIAL_PASSWORD"
+    )
 
     @property
     def frontend_origins(self) -> list[str]:
@@ -136,6 +140,8 @@ class Settings(BaseSettings):
                 raise ValueError("JWT_SECRET must be at least 32 characters in production.")
             if not self.ai_base_url.startswith("https://"):
                 raise ValueError("AI_BASE_URL must use HTTPS in production.")
+        if bool(self.admin_email) != bool(self.admin_initial_password):
+            raise ValueError("ADMIN_EMAIL and ADMIN_INITIAL_PASSWORD must be configured together.")
         return self
 
 

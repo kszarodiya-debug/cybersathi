@@ -37,8 +37,12 @@ function StudentRoute({ children }: { children: ReactNode }) {
 
 function AdminRoute({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  if (user?.role !== 'admin') return <Navigate to="/" replace />
+  if (user?.role !== 'admin') return <AccessDeniedPage />
   return children
+}
+
+function AccessDeniedPage() {
+  return <div className="mx-auto flex min-h-[70vh] max-w-2xl items-center justify-center px-5 py-16 text-center"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-teal">403 · Access denied</p><h1 className="mt-4 text-4xl font-black tracking-[-0.04em] text-ink">This area is for administrators.</h1><p className="mt-5 text-lg leading-8 text-ink/60">Your account does not have permission to view the CyberSathi administration console.</p><a className="mt-8 inline-flex min-h-11 items-center justify-center rounded-2xl bg-ink px-5 py-3 text-sm font-bold text-white hover:bg-teal" href={import.meta.env.BASE_URL}>Return home</a></div></div>
 }
 
 export default function App() {

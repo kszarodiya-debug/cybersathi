@@ -83,4 +83,15 @@ def require_roles(*allowed_roles: str):
     return role_dependency
 
 
-AdminAccess = Annotated[User, Depends(require_roles("admin"))]
+def require_admin(current_user: CurrentUser) -> User:
+    """Authorize an administrator using the database-backed role."""
+
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this resource.",
+        )
+    return current_user
+
+
+AdminAccess = Annotated[User, Depends(require_admin)]

@@ -13,6 +13,9 @@ from app.db.session import get_db
 from app.main import app
 from app.models.revoked_token import RevokedToken
 from app.models.user import User
+from app.models.awareness import AwarenessScore
+from app.models.progress import LessonProgress
+from app.models.quiz_attempt import QuizAttempt
 
 
 @pytest.fixture
@@ -26,6 +29,9 @@ def auth_context(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[TestClient, 
     )
     User.__table__.create(test_engine)
     RevokedToken.__table__.create(test_engine)
+    LessonProgress.__table__.create(test_engine)
+    QuizAttempt.__table__.create(test_engine)
+    AwarenessScore.__table__.create(test_engine)
     test_session_factory = sessionmaker(bind=test_engine, expire_on_commit=False)
 
     def override_get_db() -> Iterator[Session]:
@@ -71,6 +77,24 @@ def test_registration_hashes_password_and_hides_hash(auth_context) -> None:
         assert user.password_hash != "StrongPassword!123"
         assert user.password_hash.startswith("$argon2id$")
         assert verify_password("StrongPassword!123", user.password_hash)
+
+
+def test_registration_cannot_select_admin_role(auth_context) -> None:
+    client, session_factory = auth_context
+
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Attempted Admin",
+            "email": "attempted-admin@example.edu",
+            "password": "StrongPassword!123",
+            "role": "admin",
+        },
+    )
+
+    assert response.status_code == 422
+    with session_factory() as db:
+        assert db.query(User).filter_by(email="attempted-admin@example.edu").count() == 0
 
 
 def test_login_returns_access_token(auth_context) -> None:

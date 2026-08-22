@@ -89,14 +89,19 @@ All endpoints below require the current database role `admin`; frontend role sta
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/v1/admin/analytics` | Aggregate dashboard metrics and chart data |
-| GET | `/api/v1/admin/users` | User management list without password hashes |
+| GET | `/api/v1/admin/stats` | Live database counts for users, activity, analyses, incidents, and awareness average |
+| GET | `/api/v1/admin/activity` | Daily aggregate activity series for the last 30 days |
+| GET | `/api/v1/admin/analytics` | Aggregate dashboard metrics, risk charts, and security analytics |
+| GET | `/api/v1/admin/users` | Paginated user management/progress list; supports `page`, `page_size`, `search`, `role`, `department`, and `sort` |
+| GET | `/api/v1/admin/users/{user_id}` | Privacy-minimized aggregate progress and activity for one user |
 | PATCH | `/api/v1/admin/users/{user_id}` | Update permitted role/profile fields; audited |
 | GET | `/api/v1/admin/lessons` | Lesson management summary |
 | GET | `/api/v1/admin/quizzes` | Quiz management summary |
 | GET | `/api/v1/admin/incidents` | Incident queue with filters |
 | GET | `/api/v1/admin/incidents/{report_id}` | Incident detail |
 | PATCH | `/api/v1/admin/incidents/{report_id}` | Update status/severity; audited |
+
+Admin user responses never include passwords, password hashes, bearer tokens, API keys, message contents, submitted URLs, or incident evidence metadata. `active_users` means users with a successful login in the previous 30 days; login timestamps are not exposed outside the admin view.
 
 ## Error behavior
 

@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr
 
 
 class RegisterRequest(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     name: str = Field(min_length=2, max_length=150)
     email: EmailStr
@@ -31,6 +31,7 @@ class UserResponse(BaseModel):
     year: int | None
     created_at: datetime
     updated_at: datetime
+    last_login_at: datetime | None = None
 
 
 class TokenResponse(BaseModel):

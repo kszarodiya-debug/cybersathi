@@ -24,12 +24,12 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const redirectTo = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
-  useEffect(() => { if (user) navigate('/dashboard', { replace: true }) }, [navigate, user])
+  useEffect(() => { if (user) navigate(user.role === 'admin' ? '/admin' : '/dashboard', { replace: true }) }, [navigate, user])
   if (user) return null
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setLoading(true)
-    try { await login(email, password); navigate(redirectTo, { replace: true }) } catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : 'Unable to sign in right now.') } finally { setLoading(false) }
+    try { const loggedInUser = await login(email, password); navigate(loggedInUser.role === 'admin' ? '/admin' : redirectTo, { replace: true }) } catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : 'Unable to sign in right now.') } finally { setLoading(false) }
   }
 
   return <AuthShell eyebrow="Welcome back" title="Sign in to CyberSathi" alternate={<span>New here? <Link className="font-bold text-teal" to="/register">Create a student account</Link></span>}><form className="mt-8 grid gap-5" onSubmit={handleSubmit}><Input id="login-email" label="College email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /><Input id="login-password" label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /><Alert>Use your campus account details. Sessions are held securely in memory.</Alert>{error && <ErrorState message={error} />}<Button type="submit" loading={loading}>Sign in securely</Button>{loading && <LoadingState label="Checking your secure session…" />}</form></AuthShell>

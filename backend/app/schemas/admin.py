@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class AdminUserUpdateRequest(BaseModel):
     """Fields an administrator may change without touching credentials."""
 
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     role: Literal["student", "faculty", "admin"] | None = None
     department: str | None = Field(default=None, min_length=1, max_length=120)
@@ -27,6 +27,33 @@ class AdminUserResponse(BaseModel):
     year: int | None
     created_at: datetime
     updated_at: datetime
+    last_login_at: datetime | None = None
+    lessons_completed: int = 0
+    quiz_attempts: int = 0
+    average_quiz_score: float = 0
+    awareness_score: float | None = None
+    phishing_score: float | None = None
+    password_score: float | None = None
+    privacy_score: float | None = None
+    browsing_score: float | None = None
+
+
+class AdminUserListResponse(BaseModel):
+    users: list[AdminUserResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class AdminActivityItem(BaseModel):
+    activity_type: str
+    count: int
+    latest_at: datetime | None = None
+
+
+class AdminUserDetailResponse(AdminUserResponse):
+    recent_activity: list[AdminActivityItem]
 
 
 class AdminLessonSummary(BaseModel):
@@ -59,6 +86,24 @@ class AdminMetricSummary(BaseModel):
     total_email_analyses: int
     total_url_analyses: int
     quiz_participation: int
+    active_users: int = 0
+    registered_users: int = 0
+    total_quiz_attempts: int = 0
+    total_incident_reports: int = 0
+
+
+class AdminStatsResponse(BaseModel):
+    registered_users: int
+    active_users: int
+    students: int
+    faculty: int
+    admins: int
+    total_quiz_attempts: int
+    total_incident_reports: int
+    total_email_analyses: int
+    total_url_analyses: int
+    awareness_average: float
+    generated_at: datetime
 
 
 class AdminIncidentTrendPoint(BaseModel):
@@ -87,6 +132,21 @@ class AdminRiskPoint(BaseModel):
     count: int
 
 
+class AdminTimeSeriesPoint(BaseModel):
+    label: str
+    count: int
+
+
+class AdminActivityResponse(BaseModel):
+    registrations: list[AdminTimeSeriesPoint]
+    quiz_activity: list[AdminTimeSeriesPoint]
+    lesson_completions: list[AdminTimeSeriesPoint]
+    email_analyses: list[AdminTimeSeriesPoint]
+    url_analyses: list[AdminTimeSeriesPoint]
+    incident_reports: list[AdminTimeSeriesPoint]
+    generated_at: datetime
+
+
 class AdminAnalyticsResponse(BaseModel):
     summary: AdminMetricSummary
     incident_trends: list[AdminIncidentTrendPoint]
@@ -96,3 +156,9 @@ class AdminAnalyticsResponse(BaseModel):
     email_risk_levels: list[AdminRiskPoint]
     url_risk_levels: list[AdminRiskPoint]
     generated_at: datetime
+    awareness_distribution: list[AdminCategoryPoint] = Field(default_factory=list)
+    phishing_reports: int = 0
+    suspicious_url_analyses: int = 0
+    high_risk_url_analyses: int = 0
+    high_risk_email_analyses: int = 0
+    cyber_incidents: int = 0

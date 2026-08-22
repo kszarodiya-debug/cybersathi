@@ -18,6 +18,7 @@ from app.models.audit import AuditLog
 from app.models.awareness import AwarenessScore
 from app.models.incident import IncidentReport
 from app.models.lesson import CybersecurityLesson, Quiz, QuizQuestion
+from app.models.progress import LessonProgress
 from app.models.quiz_attempt import QuizAttempt
 from app.models.revoked_token import RevokedToken
 from app.models.user import User
@@ -34,7 +35,7 @@ def admin_context(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[TestClient,
         for table in (
             User.__table__, CybersecurityLesson.__table__, Quiz.__table__, QuizQuestion.__table__,
             QuizAttempt.__table__, IncidentReport.__table__, AwarenessScore.__table__,
-            EmailAnalysis.__table__, URLAnalysis.__table__, AuditLog.__table__, RevokedToken.__table__,
+            EmailAnalysis.__table__, URLAnalysis.__table__, AuditLog.__table__, RevokedToken.__table__, LessonProgress.__table__,
         ):
             table.create(engine)
     finally:
@@ -95,6 +96,13 @@ def test_admin_analytics_is_role_protected_and_aggregate_only(admin_context) -> 
     assert "description" not in str(body)
     assert "password_hash" not in str(body)
 
+    stats = client.get("/api/v1/admin/stats", headers=_headers(login.json()))
+    assert stats.status_code == 200
+    assert stats.json()["registered_users"] == 3
+    activity = client.get("/api/v1/admin/activity", headers=_headers(login.json()))
+    assert activity.status_code == 200
+    assert len(activity.json()["registrations"]) == 30
+
 
 def test_admin_management_endpoints_and_audit_log(admin_context) -> None:
     client, factory = admin_context
@@ -109,7 +117,12 @@ def test_admin_management_endpoints_and_audit_log(admin_context) -> None:
 
     login = client.post("/api/v1/auth/login", json={"email": "admin@example.edu", "password": "AdminPassword!123"})
     headers = _headers(login.json())
-    assert client.get("/api/v1/admin/users", headers=headers).json()[1]["email"] == "student@example.edu"
+    user_page = client.get("/api/v1/admin/users", headers=headers)
+    assert user_page.status_code == 200
+    assert {user["email"] for user in user_page.json()["users"]} == {"admin@example.edu", "student@example.edu"}
+    detail = client.get("/api/v1/admin/users/2", headers=headers)
+    assert detail.status_code == 200
+    assert "password_hash" not in str(detail.json())
     lessons = client.get("/api/v1/admin/lessons", headers=headers)
     quizzes = client.get("/api/v1/admin/quizzes", headers=headers)
     assert lessons.status_code == 200 and lessons.json()[0]["quiz_count"] == 1

@@ -40,6 +40,8 @@ Backend variables:
 | `AI_MODEL` | no | Provider model identifier |
 | `AI_TIMEOUT_SECONDS` | no | Provider timeout |
 | `AI_MAX_HISTORY_MESSAGES` | no | Number of prior turns sent to the provider |
+| `ADMIN_EMAIL` | only for one-time bootstrap | Designated administrator email; backend-only |
+| `ADMIN_INITIAL_PASSWORD` | only for one-time bootstrap | One-time password input, at least 16 characters; never commit it |
 
 Frontend variables:
 
@@ -74,6 +76,19 @@ For a migration review without a live database:
 ```powershell
 alembic upgrade head --sql
 ```
+
+## Designated administrator bootstrap
+
+Public registration always creates a `student` account and rejects an incoming `role` field. Create the designated administrator through the backend environment and a one-time initialization command; there is no public admin-registration route:
+
+```powershell
+cd backend
+$env:ADMIN_EMAIL = "your-admin-email"
+$env:ADMIN_INITIAL_PASSWORD = "use-a-unique-password-of-at-least-16-characters"
+python -m app.bootstrap_admin
+```
+
+The command hashes the password with Argon2id, is idempotent for an existing admin with that email, and refuses to promote an existing non-admin account. Supply real values through a secret manager or private shell only. Never place them in Git, frontend variables, logs, or support tickets. On Render, run it as a one-off shell/job after migrations and before using `/admin`.
 
 ## Backend
 

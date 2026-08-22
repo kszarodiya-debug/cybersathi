@@ -21,6 +21,7 @@ Configure secrets through the hosting platform's secret manager or environment s
 - `VITE_API_BASE_URL` at frontend build time, pointing to the real API base path.
 - `AI_API_KEY` only if the assistant is enabled.
 - `AI_BASE_URL` using HTTPS in production.
+- `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` only during the private one-time admin bootstrap; the password must be at least 16 characters and must never be committed.
 
 Do not put backend secrets in frontend build variables. Do not commit `.env`, `.env.*`, provider keys, database credentials, access tokens, or generated certificates.
 
@@ -29,8 +30,9 @@ Do not put backend secrets in frontend build variables. Do not commit `.env`, `.
 1. Provision a private PostgreSQL database and least-privilege application role.
 2. Configure `DATABASE_URL` through the secret manager.
 3. Run `alembic upgrade head` from the backend image/environment. The current Render Free deployment runs this command at application startup because pre-deploy commands are unavailable on that plan.
-4. Verify the migration head and application health.
-5. Encrypt backups and define retention/deletion policies for chat, analysis, incident, and audit data.
+4. Run `python -m app.bootstrap_admin` once from a private backend shell/job with `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` configured. This is the only supported designated-admin provisioning path.
+5. Verify the migration head and application health.
+6. Encrypt backups and define retention/deletion policies for chat, analysis, incident, and audit data.
 
 The production startup migration is fail-closed: if migration fails, the service does not accept application traffic. For a paid production deployment, move migrations to a dedicated pre-deploy or release job.
 
@@ -73,6 +75,8 @@ Region: Virginia (US East)
 ```
 
 Private Render environment variables include `DATABASE_URL`, `JWT_SECRET`, `APP_ENV=production`, and `FRONTEND_ORIGINS=https://kszarodiya-debug.github.io`. Add `AI_API_KEY` in Render to enable provider-backed assistant responses; do not place it in GitHub or frontend variables.
+
+The live admin console remains unavailable until the one-time bootstrap command has been run against the production database. Do not put the initial password in the Render start command or a GitHub Actions variable.
 
 ## Post-deployment smoke checks
 

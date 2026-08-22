@@ -62,6 +62,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
         department=payload.department,
         year=payload.year,
         role="student",
+        last_login_at=datetime.now(timezone.utc),
     )
     db.add(user)
     try:
@@ -94,6 +95,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
             detail="Invalid email or password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    user.last_login_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(user)
     return _token_response(user)
 
 

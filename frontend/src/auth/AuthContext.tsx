@@ -18,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password }),
     })
     applyTokenResponse(response)
+    return response.user
   }, [applyTokenResponse])
 
   const register = useCallback(async (name: string, email: string, password: string, department?: string) => {
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ name, email, password, department: department || undefined }),
     })
     applyTokenResponse(response)
+    return response.user
   }, [applyTokenResponse])
 
   const logout = useCallback(async () => {

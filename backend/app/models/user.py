@@ -1,8 +1,9 @@
 """User model and user-owned relationship definitions."""
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Index, Integer, String, UniqueConstraint, text
+from sqlalchemy import CheckConstraint, DateTime, Index, Integer, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -33,6 +34,7 @@ class User(UpdatedAtMixin, Base):
             name="ck_users_year_positive",
         ),
         Index("ix_users_department_year", "department", "year"),
+        Index("ix_users_last_login_at", "last_login_at"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -48,6 +50,7 @@ class User(UpdatedAtMixin, Base):
     )
     department: Mapped[str | None] = mapped_column(String(120), nullable=True)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(
         back_populates="user",

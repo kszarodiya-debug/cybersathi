@@ -5,9 +5,9 @@ export function Footer() {
     <footer className="border-t border-ink/10 bg-ink text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.9fr] lg:px-8">
         <div>
-          <Link className="flex items-center gap-3" to="/">
+          <Link className="flex items-center gap-3" to="/" aria-label="CyberSathi home">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-signal font-black text-ink" aria-hidden="true">C</span>
-            <span className="font-black tracking-[0.12em]">CYBERSATHI</span>
+            <span className="font-black tracking-[0.12em]">YBERSATHI</span>
           </Link>
           <p className="mt-5 max-w-xs text-sm leading-6 text-white/55">A friendly security companion for safer study, work, and digital campus life.</p>
         </div>
