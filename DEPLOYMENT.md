@@ -17,7 +17,7 @@ Configure secrets through the hosting platform's secret manager or environment s
 - `DATABASE_URL` for a private PostgreSQL service, preferably with TLS parameters.
 - `JWT_SECRET` generated randomly and at least 32 characters long.
 - Stable `JWT_ISSUER` and `JWT_AUDIENCE` values.
-- `FRONTEND_ORIGINS` containing only the real HTTPS frontend origin(s), with no wildcard.
+- `CORS_ORIGINS` containing only the real HTTPS frontend origin(s), with no wildcard. The existing `FRONTEND_ORIGINS` name remains supported for compatibility.
 - `VITE_API_BASE_URL` at frontend build time, pointing to the real API base path.
 - `AI_API_KEY` only if the assistant is enabled.
 - `AI_BASE_URL` using HTTPS in production.
@@ -29,7 +29,7 @@ Do not put backend secrets in frontend build variables. Do not commit `.env`, `.
 
 1. Provision a private PostgreSQL database and least-privilege application role.
 2. Configure `DATABASE_URL` through the secret manager.
-3. Run `alembic upgrade head` from the backend image/environment. The current Render Free deployment runs this command at application startup because pre-deploy commands are unavailable on that plan.
+3. Run `alembic upgrade head` from the backend image/environment. The current Render Free deployment applies migrations during application startup because pre-deploy commands are unavailable on that plan.
 4. Run `python -m app.bootstrap_admin` once from a private backend shell/job with `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` configured. This is the only supported designated-admin provisioning path.
 5. Verify the migration head and application health.
 6. Encrypt backups and define retention/deletion policies for chat, analysis, incident, and audit data.
@@ -74,9 +74,9 @@ Plan: Free
 Region: Virginia (US East)
 ```
 
-Private Render environment variables include `DATABASE_URL`, `JWT_SECRET`, `APP_ENV=production`, and `FRONTEND_ORIGINS=https://kszarodiya-debug.github.io`. Add `AI_API_KEY` in Render to enable provider-backed assistant responses; do not place it in GitHub or frontend variables.
+Private Render environment variables include `DATABASE_URL`, `JWT_SECRET`, `APP_ENV=production`, and the configured CORS origin for `https://kszarodiya-debug.github.io`. Add `AI_API_KEY` in Render to enable provider-backed assistant responses; do not place it in GitHub or frontend variables.
 
-The live admin console remains unavailable until the one-time bootstrap command has been run against the production database. Do not put the initial password in the Render start command or a GitHub Actions variable.
+The designated administrator was provisioned through the one-time bootstrap command against the production database. Do not put the initial password in the Render start command or a GitHub Actions variable.
 
 ## Post-deployment smoke checks
 

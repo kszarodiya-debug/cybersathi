@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import EmailStr, Field, SecretStr, field_validator, model_validator
+from pydantic import AliasChoices, EmailStr, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -100,7 +100,8 @@ class Settings(BaseSettings):
         validation_alias="AI_MAX_HISTORY_MESSAGES",
     )
     frontend_origins_raw: str = Field(
-        default="http://localhost:5173", validation_alias="FRONTEND_ORIGINS"
+        default="http://localhost:5173",
+        validation_alias=AliasChoices("CORS_ORIGINS", "FRONTEND_ORIGINS"),
     )
     admin_email: EmailStr | None = Field(default=None, validation_alias="ADMIN_EMAIL")
     admin_initial_password: SecretStr | None = Field(

@@ -27,7 +27,7 @@ Backend variables:
 | `JWT_ISSUER` | yes | JWT issuer claim |
 | `JWT_AUDIENCE` | yes | JWT audience claim |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | no | Short token lifetime, 5–60 minutes |
-| `FRONTEND_ORIGINS` | yes | Comma-separated explicit HTTP(S) browser origins; no wildcard |
+| `CORS_ORIGINS` | yes | Comma-separated explicit HTTP(S) browser origins; no wildcard. `FRONTEND_ORIGINS` remains supported for compatibility. |
 | `AUTH_RATE_LIMIT_WINDOW_SECONDS` | no | Rate-limit window |
 | `AUTH_LOGIN_RATE_LIMIT` | no | IP and email-keyed login limit |
 | `AUTH_REGISTER_RATE_LIMIT` | no | Registration limit |
@@ -135,6 +135,6 @@ pnpm audit --prod
 ## Troubleshooting
 
 - A 503 from login or registration means `JWT_SECRET` is not configured in the backend environment.
-- A CORS failure usually means the browser origin is missing from `FRONTEND_ORIGINS` or includes a path instead of an origin.
+- A CORS failure usually means the browser origin is missing from `CORS_ORIGINS` (or legacy `FRONTEND_ORIGINS`) or includes a path instead of an origin.
 - A database error means PostgreSQL is unavailable, `DATABASE_URL` is incorrect, or migrations have not been applied.
 - The assistant returns a controlled unavailable response when `AI_API_KEY` is absent; this is expected and does not affect deterministic analyzers or learning features.

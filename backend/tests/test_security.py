@@ -65,6 +65,7 @@ def test_security_headers_and_cors_are_explicit(security_context) -> None:
 def test_settings_reject_wildcard_origins_and_insecure_production() -> None:
     with pytest.raises(ValidationError):
         Settings(FRONTEND_ORIGINS="*")
+    assert Settings(CORS_ORIGINS="https://campus.example").frontend_origins == ["https://campus.example"]
     with pytest.raises(ValidationError):
         Settings(APP_ENV="production", FRONTEND_ORIGINS="https://campus.example", AI_BASE_URL="http://ai.example")
 
