@@ -28,6 +28,16 @@ class Settings(BaseSettings):
         default="postgresql+psycopg://localhost/cybersathi",
         validation_alias="DATABASE_URL",
     )
+    database_connect_timeout_seconds: int = Field(
+        default=10,
+        ge=1,
+        le=120,
+        validation_alias="DATABASE_CONNECT_TIMEOUT_SECONDS",
+    )
+    run_migrations_on_startup: bool = Field(
+        default=False,
+        validation_alias="RUN_MIGRATIONS_ON_STARTUP",
+    )
     jwt_secret: str | None = Field(
         default=None,
         min_length=32,

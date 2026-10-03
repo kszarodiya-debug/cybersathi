@@ -1,4 +1,5 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
+const API_REQUEST_TIMEOUT_MS = 15_000
 
 export class ApiError extends Error {
   readonly status: number
@@ -26,11 +27,36 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
     headers.set('Content-Type', 'application/json')
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers,
-    credentials: 'omit',
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS)
+  const abortExternalRequest = () => controller.abort()
+  init.signal?.addEventListener('abort', abortExternalRequest, { once: true })
+
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers,
+      credentials: 'omit',
+      signal: controller.signal,
+    })
+  } catch (error) {
+    const errorName = error instanceof Error
+      ? error.name
+      : typeof error === 'object' && error !== null && 'name' in error
+        ? String((error as { name: unknown }).name)
+        : undefined
+    if (errorName === 'AbortError') {
+      throw new ApiError(504, 'The service took too long to respond. Please try again.')
+    }
+    if (error instanceof TypeError || errorName === 'TypeError') {
+      throw new ApiError(0, 'The service is unavailable. Please try again.')
+    }
+    throw error
+  } finally {
+    clearTimeout(timeoutId)
+    init.signal?.removeEventListener('abort', abortExternalRequest)
+  }
 
   const contentType = response.headers.get('content-type') ?? ''
   const payload: unknown = contentType.includes('application/json')

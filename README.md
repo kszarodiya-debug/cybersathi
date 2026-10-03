@@ -86,6 +86,8 @@ Replace every placeholder secret in `backend/.env`. Never commit either `.env` f
 
 Backend variables are documented in [SETUP.md](SETUP.md), including `DATABASE_URL`, `JWT_SECRET`, `JWT_ISSUER`, `JWT_AUDIENCE`, `FRONTEND_ORIGINS`, rate limits, and optional AI-provider settings. The frontend uses `VITE_API_BASE_URL` only; it must never contain an API key or database credential.
 
+Owner and provider administration procedures are documented in [OWNER_ACCESS.md](OWNER_ACCESS.md). Database schema, pgAdmin, and college demonstration procedures are in [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md), [PGADMIN_SETUP.md](PGADMIN_SETUP.md), and [COLLEGE_DATABASE_DEMO.md](COLLEGE_DATABASE_DEMO.md).
+
 The designated administrator is provisioned separately with the one-time `python -m app.bootstrap_admin` command using backend-only `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` values. Public registration cannot select an elevated role.
 
 ## Database setup
@@ -154,7 +156,7 @@ pnpm run build
 pnpm audit --prod
 ```
 
-The final verification run passed 42 backend tests, 4 frontend tests, frontend lint, the production build, Python compilation, dependency consistency, and the npm production audit.
+The latest local verification passed 45 backend tests, 5 frontend tests, frontend lint, the production build, Python compilation, dependency consistency, and Alembic offline SQL generation.
 
 ## Deployment
 

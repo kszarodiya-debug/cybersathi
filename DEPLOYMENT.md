@@ -15,6 +15,8 @@ Configure secrets through the hosting platform's secret manager or environment s
 
 - `APP_ENV=production`
 - `DATABASE_URL` for a private PostgreSQL service, preferably with TLS parameters.
+- `DATABASE_CONNECT_TIMEOUT_SECONDS=10` to bound failed database connection attempts.
+- `RUN_MIGRATIONS_ON_STARTUP=false` for the web service; run `alembic upgrade head` as a separate release step and verify `alembic current`.
 - `JWT_SECRET` generated randomly and at least 32 characters long.
 - Stable `JWT_ISSUER` and `JWT_AUDIENCE` values.
 - `CORS_ORIGINS` containing only the real HTTPS frontend origin(s), with no wildcard. The existing `FRONTEND_ORIGINS` name remains supported for compatibility.
@@ -29,12 +31,12 @@ Do not put backend secrets in frontend build variables. Do not commit `.env`, `.
 
 1. Provision a private PostgreSQL database and least-privilege application role.
 2. Configure `DATABASE_URL` through the secret manager.
-3. Run `alembic upgrade head` from the backend image/environment. The current Render Free deployment applies migrations during application startup because pre-deploy commands are unavailable on that plan.
+3. Run `alembic upgrade head` from the backend image/environment as a separate release step before routing application traffic. Do not use the web process as an unbounded migration runner. If the Render plan cannot provide a release/pre-deploy command, run the command once from an authenticated private Render shell or controlled release environment, then keep `RUN_MIGRATIONS_ON_STARTUP=false`.
 4. Run `python -m app.bootstrap_admin` once from a private backend shell/job with `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` configured. This is the only supported designated-admin provisioning path.
 5. Verify the migration head and application health.
 6. Encrypt backups and define retention/deletion policies for chat, analysis, incident, and audit data.
 
-The production startup migration is fail-closed: if migration fails, the service does not accept application traffic. For a paid production deployment, move migrations to a dedicated pre-deploy or release job.
+The web process exposes liveness independently of migrations. Migration failures are not swallowed: the release command must fail and deployment must be stopped until the database is corrected. Database-dependent API requests will not be considered ready until `alembic current` reports `20260822_0009`.
 
 ## Backend release sequence
 
@@ -69,12 +71,12 @@ The deployed Render web service uses:
 ```text
 Root directory: backend
 Build command: pip install -r requirements.txt
-Start command: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+Start command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 Plan: Free
 Region: Virginia (US East)
 ```
 
-Private Render environment variables include `DATABASE_URL`, `JWT_SECRET`, `APP_ENV=production`, and the configured CORS origin for `https://kszarodiya-debug.github.io`. Add `AI_API_KEY` in Render to enable provider-backed assistant responses; do not place it in GitHub or frontend variables.
+Private Render environment variables include `DATABASE_URL`, `DATABASE_CONNECT_TIMEOUT_SECONDS=10`, `RUN_MIGRATIONS_ON_STARTUP=false`, `JWT_SECRET`, `APP_ENV=production`, and the configured CORS origin for `https://kszarodiya-debug.github.io`. Add `AI_API_KEY` in Render to enable provider-backed assistant responses; do not place it in GitHub or frontend variables.
 
 The designated administrator was provisioned through the one-time bootstrap command against the production database. Do not put the initial password in the Render start command or a GitHub Actions variable.
 

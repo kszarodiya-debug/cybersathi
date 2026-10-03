@@ -21,14 +21,18 @@ logger = logging.getLogger("cybersathi.api")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Apply production migrations before accepting application traffic."""
+    """Start the API and optionally apply migrations in an explicit release mode."""
 
-    if settings.app_env == "production":
+    if settings.app_env == "production" and settings.run_migrations_on_startup:
         backend_root = Path(__file__).resolve().parents[1]
         alembic_config = Config(str(backend_root / "alembic.ini"))
-        logger.info("Applying database migrations before startup")
+        logger.info("Applying database migrations in startup migration mode")
         command.upgrade(alembic_config, "head")
         logger.info("Database migrations completed")
+    elif settings.app_env == "production":
+        logger.warning(
+            "Startup migrations are disabled; run 'alembic upgrade head' as a separate release step."
+        )
     yield
 
 
