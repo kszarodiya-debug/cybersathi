@@ -1,8 +1,7 @@
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
-
-// Keep localhost available for local Vite development only. Production builds
-// must receive an explicit API URL from the deployment environment.
-export const API_BASE_URL = configuredApiBaseUrl || (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '')
+// Every environment must provide its API endpoint explicitly. Local development
+// uses frontend/.env, while production receives this value from the deployment
+// environment. This prevents localhost from entering production bundles.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || ''
 const API_REQUEST_TIMEOUT_MS = 15_000
 
 export class ApiError extends Error {
