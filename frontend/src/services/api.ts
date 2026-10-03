@@ -1,6 +1,6 @@
 // Every environment must provide its API endpoint explicitly. Local development
 // uses frontend/.env, while production receives this value from the deployment
-// environment. This prevents localhost from entering production bundles.
+// environment. This prevents development URLs from entering production bundles.
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || ''
 const API_REQUEST_TIMEOUT_MS = 15_000
 
