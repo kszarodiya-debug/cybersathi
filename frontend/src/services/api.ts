@@ -1,4 +1,8 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+
+// Keep localhost available for local Vite development only. Production builds
+// must receive an explicit API URL from the deployment environment.
+export const API_BASE_URL = configuredApiBaseUrl || (import.meta.env.DEV ? 'http://localhost:8000/api/v1' : '')
 const API_REQUEST_TIMEOUT_MS = 15_000
 
 export class ApiError extends Error {
@@ -21,6 +25,10 @@ function errorMessage(payload: unknown): string {
 }
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (!API_BASE_URL) {
+    throw new ApiError(503, 'The service is not configured. Please try again later.')
+  }
+
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
   if (init.body && !headers.has('Content-Type')) {
