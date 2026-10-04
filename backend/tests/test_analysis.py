@@ -10,6 +10,7 @@ from app.auth.rate_limit import analysis_rate_limiter, auth_rate_limiter
 from app.core.config import settings
 from app.db.session import get_db
 from app.main import app
+from app.main import app
 from app.models.analysis import EmailAnalysis
 from app.models.revoked_token import RevokedToken
 from app.models.user import User
@@ -153,5 +154,28 @@ def test_public_message_analyzer_is_ephemeral_without_authentication(analysis_co
 
     assert response.status_code == 201
     assert response.json()["id"] is None
+    assert response.json()["detected_indicators"]
+    assert response.json()["recommended_actions"]
+    assert response.json()["safe_handling_advice"]
     with session_factory() as db:
         assert db.query(EmailAnalysis).count() == 0
+
+
+def test_public_message_analyzer_does_not_require_a_database_session(analysis_context) -> None:
+    client, _ = analysis_context
+    previous = app.dependency_overrides[get_db]
+
+    def unavailable_database():
+        raise AssertionError("Guest message analysis should not request a database session.")
+
+    app.dependency_overrides[get_db] = unavailable_database
+    try:
+        response = client.post(
+            "/api/v1/public/analysis/messages",
+            json={"content_type": "sms", "message": "Please verify this request through a trusted channel."},
+        )
+    finally:
+        app.dependency_overrides[get_db] = previous
+
+    assert response.status_code == 201
+    assert response.json()["id"] is None

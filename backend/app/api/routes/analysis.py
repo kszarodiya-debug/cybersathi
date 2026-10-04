@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import OptionalUser, StudentOnlyAccess
+from app.auth.dependencies import StudentOnlyAccess
 from app.auth.rate_limit import analysis_rate_limit
 from app.db.session import get_db
 from app.schemas.analysis import MessageAnalysisRequest, MessageAnalysisResponse
@@ -47,15 +47,12 @@ def analyze_message(
 )
 def analyze_public_message(
     payload: MessageAnalysisRequest,
-    current_user: OptionalUser,
-    db: Session = Depends(get_db),
 ) -> MessageAnalysisResponse:
     """Analyze a message without login; anonymous results are not persisted."""
 
-    user_id = current_user.id if current_user and current_user.role == "student" else None
     return persist_message_analysis(
-        db,
-        user_id=user_id,
+        None,
+        user_id=None,
         content=payload.message,
         content_type=payload.content_type,
     )

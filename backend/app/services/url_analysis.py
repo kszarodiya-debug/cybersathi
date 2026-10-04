@@ -10,7 +10,13 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.models.analysis import URLAnalysis
-from app.schemas.url_analysis import URLAnalysisResponse, URLDetectedIndicator, URLRiskLevel
+from app.schemas.url_analysis import (
+    URLAnalysisResponse,
+    URLDetectedIndicator,
+    URLInformation,
+    URLRiskLevel,
+    URLSecurityCheck,
+)
 
 
 def _indicator(code: str, label: str, description: str, severity: str) -> URLDetectedIndicator:
@@ -264,8 +270,74 @@ def analyze_url_value(url: str) -> dict[str, object]:
             "No obvious structural warning indicators were detected in this URL. "
             "This is not proof that the destination is safe; reputation, page content, and context were not checked, and no connection was made."
         )
+    indicator_codes = set(weights)
+    security_checks = [
+        URLSecurityCheck(
+            name="HTTPS",
+            status="pass" if parsed.scheme.lower() == "https" else "attention",
+            details=(
+                "The URL uses HTTPS."
+                if parsed.scheme.lower() == "https"
+                else "The URL does not use HTTPS; transport encryption cannot be assumed."
+            ),
+        ),
+        URLSecurityCheck(
+            name="Hostname format",
+            status="attention" if "ip_address_host" in indicator_codes else "pass",
+            details=(
+                "The destination uses a numeric IP address; independently verify it."
+                if "ip_address_host" in indicator_codes
+                else "The destination uses a hostname rather than a numeric IP address."
+            ),
+        ),
+        URLSecurityCheck(
+            name="Credentials in URL",
+            status="attention" if "embedded_credentials" in indicator_codes else "pass",
+            details=(
+                "User-information fields are present before the hostname."
+                if "embedded_credentials" in indicator_codes
+                else "No embedded username or password was found."
+            ),
+        ),
+        URLSecurityCheck(
+            name="Punycode or IDN",
+            status="attention" if "idn_or_punycode" in indicator_codes else "pass",
+            details=(
+                "The hostname contains internationalized or punycode labels."
+                if "idn_or_punycode" in indicator_codes
+                else "No punycode or non-ASCII hostname indicator was found."
+            ),
+        ),
+        URLSecurityCheck(
+            name="Query parameters",
+            status="attention" if "suspicious_query" in indicator_codes else "pass",
+            details=(
+                "Redirect, token, session, login, or similar query parameters were found."
+                if "suspicious_query" in indicator_codes
+                else f"{len(query_pairs)} query parameter(s) were parsed without the current suspicious patterns."
+            ),
+        ),
+        URLSecurityCheck(
+            name="Domain reputation",
+            status="not_checked",
+            details="No external reputation service was queried.",
+        ),
+        URLSecurityCheck(
+            name="Redirects, TLS, and security headers",
+            status="not_checked",
+            details="No network request was made, so redirects, TLS configuration, page content, and HTTP headers were not checked.",
+        ),
+    ]
     return {
         "url": url,
+        "url_information": URLInformation(
+            protocol=parsed.scheme.lower(),
+            hostname=hostname,
+            port=parsed.port,
+            path=parsed.path or "/",
+            query_parameter_count=len(query_pairs),
+        ),
+        "security_checks": security_checks,
         "risk_score": score,
         "risk_level": level,
         "detected_indicators": indicators,
@@ -275,9 +347,12 @@ def analyze_url_value(url: str) -> dict[str, object]:
 
 
 def _to_response(analysis: URLAnalysis) -> URLAnalysisResponse:
+    result = analyze_url_value(analysis.url)
     return URLAnalysisResponse(
         id=analysis.id,
         url=analysis.url,
+        url_information=result["url_information"],
+        security_checks=result["security_checks"],
         risk_score=int(analysis.risk_score),
         risk_level=analysis.risk_level.upper(),  # type: ignore[arg-type]
         detected_indicators=[URLDetectedIndicator.model_validate(item) for item in analysis.detected_indicators],
@@ -287,7 +362,7 @@ def _to_response(analysis: URLAnalysis) -> URLAnalysisResponse:
     )
 
 
-def persist_url_analysis(db: Session, *, user_id: int | None, url: str) -> URLAnalysisResponse:
+def persist_url_analysis(db: Session | None, *, user_id: int | None, url: str) -> URLAnalysisResponse:
     result = analyze_url_value(url)
     indicators = result["detected_indicators"]
     assert isinstance(indicators, list)
@@ -299,6 +374,8 @@ def persist_url_analysis(db: Session, *, user_id: int | None, url: str) -> URLAn
         return URLAnalysisResponse(
             id=None,
             url=url,
+            url_information=result["url_information"],
+            security_checks=result["security_checks"],
             risk_score=score,
             risk_level=level,  # type: ignore[arg-type]
             detected_indicators=[URLDetectedIndicator.model_validate(item) for item in indicators],
@@ -306,6 +383,9 @@ def persist_url_analysis(db: Session, *, user_id: int | None, url: str) -> URLAn
             recommended_action=str(result["recommended_action"]),
             created_at=datetime.now(timezone.utc),
         )
+
+    if db is None:
+        raise RuntimeError("A database session is required to persist an authenticated URL analysis.")
 
     analysis = URLAnalysis(
         user_id=user_id,

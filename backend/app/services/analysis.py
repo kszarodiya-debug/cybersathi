@@ -214,7 +214,7 @@ def analyze_message_content(content: str, content_type: MessageContentType) -> d
 
 
 def persist_message_analysis(
-    db: Session,
+    db: Session | None,
     *,
     user_id: int | None,
     content: str,
@@ -239,6 +239,9 @@ def persist_message_analysis(
             safe_handling_advice=str(result["safe_handling_advice"]),
             created_at=datetime.now(timezone.utc),
         )
+
+    if db is None:
+        raise RuntimeError("A database session is required to persist an authenticated message analysis.")
 
     analysis = EmailAnalysis(
         user_id=user_id,

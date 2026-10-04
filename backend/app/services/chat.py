@@ -13,8 +13,8 @@ from app.models.chat import ChatHistory
 from app.schemas.chat import ChatMessageResponse
 
 
-def _recent_history(db: Session, user_id: int | None) -> list[ChatHistory]:
-    if user_id is None:
+def _recent_history(db: Session | None, user_id: int | None) -> list[ChatHistory]:
+    if user_id is None or db is None:
         return []
     rows = db.scalars(
         select(ChatHistory)
@@ -39,7 +39,7 @@ def _provider_messages(history: Sequence[ChatHistory], message: str) -> list[Pro
 
 
 async def answer_message(
-    db: Session,
+    db: Session | None,
     *,
     user_id: int | None,
     message: str,
@@ -59,6 +59,9 @@ async def answer_message(
             response=response,
             created_at=datetime.now(timezone.utc),
         )
+
+    if db is None:
+        raise RuntimeError("A database session is required to persist an authenticated chat message.")
 
     history = ChatHistory(user_id=user_id, message=message, response=response)
     db.add(history)

@@ -71,7 +71,7 @@ Clients never submit a score. Correct answers, duplicate answers, ownership, and
 | POST | `/api/v1/students/analysis/urls` | Analyze URL structure without connecting to it |
 | GET | `/api/v1/students/analysis/urls/history` | Authenticated user's URL analysis history |
 
-The analyzers are defensive indicators, not proof of compromise or safety. They do not exploit, scan, brute-force, or bypass destinations.
+The analyzers are defensive indicators, not proof of compromise or safety. They do not exploit, scan, brute-force, or bypass destinations. URL responses include parsed URL information, structural security checks, detected indicators, risk score/level, explanation, and recommended action. Reputation, redirects, TLS configuration, page content, and HTTP security headers are explicitly marked as not checked because no network request is made.
 
 ### Chat
 

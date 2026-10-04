@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 URLRiskLevel = Literal["SAFE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]
 URLIndicatorSeverity = Literal["low", "medium", "high"]
+URLCheckStatus = Literal["pass", "attention", "not_checked"]
 
 
 class URLAnalysisRequest(BaseModel):
@@ -39,11 +40,29 @@ class URLDetectedIndicator(BaseModel):
     severity: URLIndicatorSeverity
 
 
+class URLInformation(BaseModel):
+    """Parsed URL components; no network request is made to obtain them."""
+
+    protocol: str
+    hostname: str
+    port: int | None
+    path: str
+    query_parameter_count: int
+
+
+class URLSecurityCheck(BaseModel):
+    name: str
+    status: URLCheckStatus
+    details: str
+
+
 class URLAnalysisResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int | None
     url: str
+    url_information: URLInformation
+    security_checks: list[URLSecurityCheck]
     risk_score: int = Field(ge=0, le=100)
     risk_level: URLRiskLevel
     detected_indicators: list[URLDetectedIndicator]

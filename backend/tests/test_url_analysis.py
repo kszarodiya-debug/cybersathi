@@ -10,6 +10,7 @@ from app.auth.rate_limit import analysis_rate_limiter, auth_rate_limiter
 from app.core.config import settings
 from app.db.session import get_db
 from app.main import app
+from app.main import app
 from app.models.analysis import URLAnalysis
 from app.models.revoked_token import RevokedToken
 from app.models.user import User
@@ -137,5 +138,35 @@ def test_public_url_analyzer_is_ephemeral_without_authentication(url_context) ->
 
     assert response.status_code == 201
     assert response.json()["id"] is None
+    assert response.json()["url_information"] == {
+        "protocol": "https",
+        "hostname": "example.edu",
+        "port": None,
+        "path": "/resources",
+        "query_parameter_count": 0,
+    }
+    assert {check["name"] for check in response.json()["security_checks"]} >= {
+        "HTTPS",
+        "Hostname format",
+        "Domain reputation",
+        "Redirects, TLS, and security headers",
+    }
     with session_factory() as db:
         assert db.query(URLAnalysis).count() == 0
+
+
+def test_public_url_analyzer_does_not_require_a_database_session(url_context) -> None:
+    client, _ = url_context
+    previous = app.dependency_overrides[get_db]
+
+    def unavailable_database():
+        raise AssertionError("Guest URL analysis should not request a database session.")
+
+    app.dependency_overrides[get_db] = unavailable_database
+    try:
+        response = client.post("/api/v1/public/analysis/urls", json={"url": "https://example.edu"})
+    finally:
+        app.dependency_overrides[get_db] = previous
+
+    assert response.status_code == 201
+    assert response.json()["id"] is None
