@@ -1,6 +1,14 @@
 # CyberSathi deployment
 
-CyberSathi is deployed using GitHub Pages for the frontend and Render for the FastAPI backend and PostgreSQL database. Credentials remain in provider-managed secret storage and are not committed to this repository.
+CyberSathi currently uses GitHub Pages for the frontend and has a legacy
+Render deployment for the FastAPI API. A Supabase migration is documented in
+[SUPABASE_MIGRATION.md](SUPABASE_MIGRATION.md), but it is not complete until a
+Supabase PostgreSQL project and a separately hosted FastAPI API have both been
+verified. Do not change the live API URL or delete the current deployment
+before that verification.
+
+Credentials remain in provider-managed secret storage and are not committed
+to this repository.
 
 Live services:
 

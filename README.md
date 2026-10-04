@@ -104,7 +104,9 @@ From `backend/`, apply migrations explicitly for local development:
 alembic upgrade head
 ```
 
-The current migration head is `20260822_0009`. In the Render production deployment, the backend applies migrations before accepting traffic because the free Render tier does not provide a pre-deploy command.
+The current migration head is `20260822_0009`. Production migrations must run
+as a separate release/pre-deploy step before routing traffic; the web process
+does not silently apply migrations during startup.
 
 ## Running the backend
 
@@ -160,15 +162,17 @@ The latest local verification passed 45 backend tests, 5 frontend tests, fronten
 
 ## Deployment
 
-Current deployment:
+Current deployment and migration status:
 
 - Frontend: [GitHub Pages](https://kszarodiya-debug.github.io/cybersathi/)
-- Backend API: [Render](https://cybersathi-2bao.onrender.com)
-- API health: [https://cybersathi-2bao.onrender.com/api/v1/health](https://cybersathi-2bao.onrender.com/api/v1/health)
-- Database: Render PostgreSQL service `cybersathi-db` on the Free plan
+- The existing production API is a legacy Render deployment while the
+  provider migration is prepared. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- Supabase migration status and the required non-Render FastAPI hosting step
+  are documented in [SUPABASE_MIGRATION.md](SUPABASE_MIGRATION.md).
 - Pages workflow: `.github/workflows/deploy-pages.yml`
 
-The Render Free plan is suitable for testing and may sleep or expire. Configure `AI_API_KEY` privately in Render to enable the AI assistant. See [DEPLOYMENT.md](DEPLOYMENT.md) for the production checklist and provider configuration.
+Configure `AI_API_KEY` privately in the API host's secret store to enable the
+AI assistant. Do not place it in GitHub or frontend variables.
 
 ## Security considerations
 
