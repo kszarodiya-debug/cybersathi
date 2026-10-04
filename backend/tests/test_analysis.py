@@ -141,3 +141,17 @@ def test_message_analyzer_validates_input_and_requires_authentication(analysis_c
     )
     assert blank.status_code == 422
     assert unsupported.status_code == 422
+
+
+def test_public_message_analyzer_is_ephemeral_without_authentication(analysis_context) -> None:
+    client, session_factory = analysis_context
+
+    response = client.post(
+        "/api/v1/public/analysis/messages",
+        json={"content_type": "sms", "message": "Urgent: verify your account now."},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["id"] is None
+    with session_factory() as db:
+        assert db.query(EmailAnalysis).count() == 0

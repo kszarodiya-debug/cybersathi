@@ -8,7 +8,7 @@ import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
-import { ApiError } from '../services/api'
+import { apiRequest, ApiError } from '../services/api'
 import type {
   QuizAttemptHistory,
   QuizAttemptHistoryResponse,
@@ -50,7 +50,7 @@ function HistoryList({ attempts }: { attempts: QuizAttemptHistory[] }) {
 }
 
 export function QuizPage() {
-  const { authenticatedRequest } = useAuth()
+  const { user, authenticatedRequest } = useAuth()
   const [catalog, setCatalog] = useState<QuizListResponse | null>(null)
   const [history, setHistory] = useState<QuizAttemptHistoryResponse | null>(null)
   const [category, setCategory] = useState('')
@@ -73,8 +73,12 @@ export function QuizPage() {
       if (difficulty) query.set('difficulty', difficulty)
       const suffix = query.toString() ? `?${query.toString()}` : ''
       const [quizData, attemptData] = await Promise.all([
-        authenticatedRequest<QuizListResponse>(`/students/quizzes${suffix}`),
-        authenticatedRequest<QuizAttemptHistoryResponse>('/students/quiz-attempts'),
+        user
+          ? authenticatedRequest<QuizListResponse>(`/students/quizzes${suffix}`)
+          : apiRequest<QuizListResponse>(`/public/quizzes${suffix}`),
+        user
+          ? authenticatedRequest<QuizAttemptHistoryResponse>('/students/quiz-attempts')
+          : Promise.resolve<QuizAttemptHistoryResponse>({ attempts: [], total: 0 }),
       ])
       setCatalog(quizData)
       setHistory(attemptData)
@@ -83,13 +87,17 @@ export function QuizPage() {
     } finally {
       setLoading(false)
     }
-  }, [authenticatedRequest, category, difficulty])
+  }, [authenticatedRequest, category, difficulty, user])
 
   useEffect(() => { void loadData() }, [loadData])
 
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers])
 
   async function startQuiz(quizId: number) {
+    if (!user) {
+      setActionError('Sign in to take this quiz and save your awareness score.')
+      return
+    }
     setStarting(true)
     setActionError('')
     setResult(null)

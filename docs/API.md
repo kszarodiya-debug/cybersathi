@@ -11,6 +11,23 @@ The API is served under the configured `API_V1_PREFIX` (default `/api/v1`). Auth
 | POST | `/api/v1/auth/register` | Create a student account and issue a token |
 | POST | `/api/v1/auth/login` | Authenticate and issue a token |
 
+## Public awareness endpoints
+
+These endpoints do not require login. Anonymous analyzer and assistant results
+are ephemeral and are not written to a user's history. Supplying a valid
+student bearer token enables optional persistence without changing the public
+response shape.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/v1/public/lessons` | Read-only lesson catalog with optional category filter |
+| GET | `/api/v1/public/lessons/{lesson_id}` | Read-only lesson detail |
+| GET | `/api/v1/public/quizzes` | Read-only quiz catalog with optional filters |
+| GET | `/api/v1/public/quizzes/{quiz_id}` | Read-only quiz questions without correct answers |
+| POST | `/api/v1/public/analysis/messages` | Analyze message text without saving anonymous history |
+| POST | `/api/v1/public/analysis/urls` | Analyze URL structure without saving anonymous history |
+| POST | `/api/v1/chat` | Ask the defensive assistant; anonymous turns are not saved |
+
 ## Authentication endpoints
 
 | Method | Path | Access |
@@ -61,7 +78,7 @@ The analyzers are defensive indicators, not proof of compromise or safety. They 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/api/v1/chat/history` | Authenticated user's chat history |
-| POST | `/api/v1/chat` | Defensive assistant question |
+| POST | `/api/v1/chat` | Defensive assistant question; public, with optional student persistence |
 | DELETE | `/api/v1/chat/history` | Clear authenticated user's history |
 
 The AI key remains on the backend. The provider is accessed through an abstraction with timeouts and controlled error responses.

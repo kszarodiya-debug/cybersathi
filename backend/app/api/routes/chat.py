@@ -14,7 +14,7 @@ from app.ai.provider import (
     AIProvider,
     get_ai_provider,
 )
-from app.auth.dependencies import StudentOnlyAccess
+from app.auth.dependencies import OptionalUser, StudentOnlyAccess
 from app.auth.rate_limit import chat_rate_limit, submission_rate_limit
 from app.db.session import get_db
 from app.models.chat import ChatHistory
@@ -48,14 +48,14 @@ def chat_history(
 )
 async def send_chat_message(
     payload: ChatRequest,
-    current_user: StudentOnlyAccess,
+    current_user: OptionalUser,
     db: Session = Depends(get_db),
     provider: AIProvider = Depends(get_ai_provider),
 ) -> ChatMessageResponse:
     try:
         history = await answer_message(
             db,
-            user_id=current_user.id,
+            user_id=current_user.id if current_user and current_user.role == "student" else None,
             message=payload.message,
             provider=provider,
         )

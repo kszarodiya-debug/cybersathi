@@ -146,3 +146,16 @@ def test_missing_lesson_returns_not_found(lesson_context) -> None:
         headers={"Authorization": f"Bearer {user['access_token']}"},
     )
     assert response.status_code == 404
+
+
+def test_public_learning_hub_and_lesson_detail_do_not_require_login(lesson_context) -> None:
+    client, _ = lesson_context
+
+    listing = client.get("/api/v1/public/lessons")
+    assert listing.status_code == 200
+    assert listing.json()["total"] == 2
+    assert listing.json()["completed_count"] == 0
+
+    detail = client.get("/api/v1/public/lessons/1")
+    assert detail.status_code == 200
+    assert detail.json()["completed"] is False

@@ -17,6 +17,10 @@ from app.models.user import User
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{settings.api_v1_prefix}/auth/login",
 )
+optional_oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.api_v1_prefix}/auth/login",
+    auto_error=False,
+)
 
 
 def _unauthorized() -> HTTPException:
@@ -55,6 +59,39 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_optional_user(
+    token: Annotated[str | None, Depends(optional_oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+) -> User | None:
+    """Load a user when a valid bearer token is supplied, otherwise stay public.
+
+    Public endpoints never use this dependency to expose private data. A valid
+    student token enables optional persistence; anonymous requests remain
+    ephemeral. Invalid or expired optional tokens are treated as anonymous so
+    a stale browser token cannot block a public defensive tool.
+    """
+
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+    except (AuthenticationConfigurationError, InvalidTokenError, KeyError, TypeError, ValueError):
+        return None
+    jti = payload.get("jti")
+    if not isinstance(jti, str) or not jti:
+        return None
+    if db.get(RevokedToken, jti) is not None:
+        return None
+    try:
+        user_id = int(payload["sub"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return db.get(User, user_id)
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 
 
 def _require_student(current_user: CurrentUser) -> User:

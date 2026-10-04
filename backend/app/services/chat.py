@@ -1,6 +1,7 @@
 """Application service for safe, user-scoped CyberSathi conversations."""
 
 from collections.abc import Sequence
+from datetime import datetime, timezone
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -9,9 +10,12 @@ from app.ai.provider import AIProvider, ProviderMessage
 from app.ai.safety import CYBERSATHI_SYSTEM_PROMPT, enforce_safe_output, safety_response_for
 from app.core.config import settings
 from app.models.chat import ChatHistory
+from app.schemas.chat import ChatMessageResponse
 
 
-def _recent_history(db: Session, user_id: int) -> list[ChatHistory]:
+def _recent_history(db: Session, user_id: int | None) -> list[ChatHistory]:
+    if user_id is None:
+        return []
     rows = db.scalars(
         select(ChatHistory)
         .where(ChatHistory.user_id == user_id)
@@ -37,19 +41,27 @@ def _provider_messages(history: Sequence[ChatHistory], message: str) -> list[Pro
 async def answer_message(
     db: Session,
     *,
-    user_id: int,
+    user_id: int | None,
     message: str,
     provider: AIProvider,
-) -> ChatHistory:
-    """Generate, safety-filter, and persist one user-scoped conversation turn."""
+) -> ChatMessageResponse:
+    """Generate a response and persist it only for an authenticated student."""
 
     response = safety_response_for(message)
     if response is None:
         response = await provider.generate(_provider_messages(_recent_history(db, user_id), message))
         response = enforce_safe_output(response)
 
+    if user_id is None:
+        return ChatMessageResponse(
+            id=None,
+            message=message,
+            response=response,
+            created_at=datetime.now(timezone.utc),
+        )
+
     history = ChatHistory(user_id=user_id, message=message, response=response)
     db.add(history)
     db.commit()
     db.refresh(history)
-    return history
+    return ChatMessageResponse.model_validate(history)

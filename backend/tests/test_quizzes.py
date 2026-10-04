@@ -166,6 +166,20 @@ def test_quiz_requires_authentication_and_hides_correct_answers(quiz_context) ->
     assert all("correct_answer" not in question for question in detail.json()["questions"])
 
 
+def test_public_quiz_catalog_is_read_only(quiz_context) -> None:
+    client, _ = quiz_context
+
+    catalog = client.get("/api/v1/public/quizzes")
+    assert catalog.status_code == 200
+    assert catalog.json()["total"] == 2
+    assert catalog.json()["quizzes"][0]["attempt_count"] == 0
+
+    quiz_id = catalog.json()["quizzes"][0]["id"]
+    detail = client.get(f"/api/v1/public/quizzes/{quiz_id}")
+    assert detail.status_code == 200
+    assert all("correct_answer" not in question for question in detail.json()["questions"])
+
+
 def test_correct_answers_are_graded_by_backend_and_duplicate_submit_is_rejected(quiz_context) -> None:
     client, session_factory = quiz_context
     session = _register(client, "correct@example.edu")

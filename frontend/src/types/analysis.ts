@@ -9,7 +9,7 @@ export interface DetectedIndicator {
 }
 
 export interface MessageAnalysisResult {
-  id: number
+  id: number | null
   content_type: MessageContentType
   risk_score: number
   risk_level: RiskLevel

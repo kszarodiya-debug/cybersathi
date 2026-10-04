@@ -2,6 +2,7 @@
 
 import ipaddress
 import re
+from datetime import datetime, timezone
 from decimal import Decimal
 from urllib.parse import parse_qsl, urlsplit
 
@@ -286,7 +287,7 @@ def _to_response(analysis: URLAnalysis) -> URLAnalysisResponse:
     )
 
 
-def persist_url_analysis(db: Session, *, user_id: int, url: str) -> URLAnalysisResponse:
+def persist_url_analysis(db: Session, *, user_id: int | None, url: str) -> URLAnalysisResponse:
     result = analyze_url_value(url)
     indicators = result["detected_indicators"]
     assert isinstance(indicators, list)
@@ -294,6 +295,18 @@ def persist_url_analysis(db: Session, *, user_id: int, url: str) -> URLAnalysisR
     level = result["risk_level"]
     assert isinstance(score, int)
     assert isinstance(level, str)
+    if user_id is None:
+        return URLAnalysisResponse(
+            id=None,
+            url=url,
+            risk_score=score,
+            risk_level=level,  # type: ignore[arg-type]
+            detected_indicators=[URLDetectedIndicator.model_validate(item) for item in indicators],
+            explanation=str(result["explanation"]),
+            recommended_action=str(result["recommended_action"]),
+            created_at=datetime.now(timezone.utc),
+        )
+
     analysis = URLAnalysis(
         user_id=user_id,
         url=url,

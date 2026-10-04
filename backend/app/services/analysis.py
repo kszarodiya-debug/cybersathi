@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -215,7 +216,7 @@ def analyze_message_content(content: str, content_type: MessageContentType) -> d
 def persist_message_analysis(
     db: Session,
     *,
-    user_id: int,
+    user_id: int | None,
     content: str,
     content_type: MessageContentType,
 ) -> MessageAnalysisResponse:
@@ -226,6 +227,19 @@ def persist_message_analysis(
     risk_level = result["risk_level"]
     assert isinstance(risk_score, int)
     assert isinstance(risk_level, str)
+    if user_id is None:
+        return MessageAnalysisResponse(
+            id=None,
+            content_type=content_type,
+            risk_score=risk_score,
+            risk_level=risk_level.upper(),  # type: ignore[arg-type]
+            detected_indicators=[DetectedIndicator.model_validate(item) for item in indicators],
+            explanation=str(result["explanation"]),
+            recommended_actions=list(result["recommended_actions"]),  # type: ignore[arg-type]
+            safe_handling_advice=str(result["safe_handling_advice"]),
+            created_at=datetime.now(timezone.utc),
+        )
+
     analysis = EmailAnalysis(
         user_id=user_id,
         content_type=content_type,

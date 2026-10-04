@@ -71,7 +71,7 @@ def _quiz_summary(
 def list_quizzes(
     db: Session,
     *,
-    user_id: int,
+    user_id: int | None,
     category: str | None = None,
     difficulty: str | None = None,
 ) -> QuizListResponse:
@@ -105,7 +105,7 @@ def list_quizzes(
     )
 
 
-def get_quiz(db: Session, *, quiz_id: int, user_id: int) -> QuizDetailResponse:
+def get_quiz(db: Session, *, quiz_id: int, user_id: int | None) -> QuizDetailResponse:
     quiz = db.scalar(
         select(Quiz)
         .options(selectinload(Quiz.questions))

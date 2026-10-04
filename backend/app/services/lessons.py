@@ -31,7 +31,7 @@ def _summary(lesson: CybersecurityLesson, progress: LessonProgress | None) -> Le
     )
 
 
-def list_lessons(db: Session, *, user_id: int, category: str | None) -> LessonListResponse:
+def list_lessons(db: Session, *, user_id: int | None, category: str | None) -> LessonListResponse:
     lesson_query = select(CybersecurityLesson).order_by(CybersecurityLesson.id)
     normalized_category = category.strip().lower() if category else None
     if normalized_category:
@@ -67,7 +67,7 @@ def list_lessons(db: Session, *, user_id: int, category: str | None) -> LessonLi
     )
 
 
-def get_lesson(db: Session, *, user_id: int, lesson_id: int) -> LessonDetailResponse:
+def get_lesson(db: Session, *, user_id: int | None, lesson_id: int) -> LessonDetailResponse:
     lesson = db.get(CybersecurityLesson, lesson_id)
     if lesson is None:
         raise LessonNotFoundError

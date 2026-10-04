@@ -42,7 +42,7 @@ class URLDetectedIndicator(BaseModel):
 class URLAnalysisResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: int | None
     url: str
     risk_score: int = Field(ge=0, le=100)
     risk_level: URLRiskLevel

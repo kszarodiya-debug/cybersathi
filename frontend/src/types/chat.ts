@@ -1,5 +1,5 @@
 export interface ChatMessage {
-  id: number
+  id: number | null
   message: string
   response: string
   created_at: string

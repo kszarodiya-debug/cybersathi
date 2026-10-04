@@ -8,7 +8,7 @@ export interface URLDetectedIndicator {
 }
 
 export interface URLAnalysisResult {
-  id: number
+  id: number | null
   url: string
   risk_score: number
   risk_level: URLRiskLevel

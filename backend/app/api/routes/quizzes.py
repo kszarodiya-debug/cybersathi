@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import StudentOnlyAccess
+from app.auth.dependencies import OptionalUser, StudentOnlyAccess
 from app.auth.rate_limit import submission_rate_limit
 from app.db.session import get_db
 from app.schemas.quiz import (
@@ -31,6 +31,7 @@ from app.services.quizzes import (
 
 
 router = APIRouter(prefix="/students", tags=["quizzes"])
+public_router = APIRouter(prefix="/public/quizzes", tags=["public-quizzes"])
 
 
 @router.get("/quizzes", response_model=QuizListResponse)
@@ -120,3 +121,31 @@ def quiz_attempt_history(
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> QuizAttemptHistoryListResponse:
     return list_attempt_history(db, user_id=current_user.id, limit=limit)
+
+
+@public_router.get("", response_model=QuizListResponse)
+def public_quizzes(
+    current_user: OptionalUser,
+    db: Session = Depends(get_db),
+    category: Annotated[str | None, Query(max_length=100)] = None,
+    difficulty: Annotated[str | None, Query(max_length=20)] = None,
+) -> QuizListResponse:
+    """Expose the quiz catalog publicly without exposing attempts or scores."""
+
+    user_id = current_user.id if current_user and current_user.role == "student" else None
+    return list_quizzes(db, user_id=user_id, category=category, difficulty=difficulty)
+
+
+@public_router.get("/{quiz_id}", response_model=QuizDetailResponse)
+def public_quiz_detail(
+    quiz_id: Annotated[int, Path(gt=0)],
+    current_user: OptionalUser,
+    db: Session = Depends(get_db),
+) -> QuizDetailResponse:
+    """Expose questions publicly; answer validation and persistence stay private."""
+
+    user_id = current_user.id if current_user and current_user.role == "student" else None
+    try:
+        return get_quiz(db, quiz_id=quiz_id, user_id=user_id)
+    except QuizNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found.") from None

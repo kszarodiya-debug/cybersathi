@@ -125,3 +125,17 @@ def test_url_history_is_scoped_and_validation_is_safe(url_context) -> None:
         json={"url": "javascript:alert(1)"},
     )
     assert invalid.status_code == 422
+
+
+def test_public_url_analyzer_is_ephemeral_without_authentication(url_context) -> None:
+    client, session_factory = url_context
+
+    response = client.post(
+        "/api/v1/public/analysis/urls",
+        json={"url": "https://example.edu/resources"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["id"] is None
+    with session_factory() as db:
+        assert db.query(URLAnalysis).count() == 0

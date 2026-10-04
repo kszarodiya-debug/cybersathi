@@ -35,7 +35,7 @@ class DetectedIndicator(BaseModel):
 class MessageAnalysisResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: int | None
     content_type: MessageContentType
     risk_score: int = Field(ge=0, le=100)
     risk_level: RiskLevel

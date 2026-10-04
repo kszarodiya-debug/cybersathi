@@ -161,3 +161,18 @@ def test_chat_rate_limit_returns_retryable_error(chat_context, monkeypatch: pyte
     limited = client.post("/api/v1/chat", headers=headers, json={"message": "What is 2FA?"})
     assert limited.status_code == 429
     assert limited.headers["retry-after"]
+
+
+def test_public_chat_is_ephemeral_without_authentication(chat_context) -> None:
+    client, session_factory, provider = chat_context
+
+    response = client.post(
+        "/api/v1/chat",
+        json={"message": "What is phishing?"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["id"] is None
+    assert provider.calls
+    with session_factory() as db:
+        assert db.query(ChatHistory).count() == 0
