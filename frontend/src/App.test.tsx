@@ -16,10 +16,10 @@ describe('CyberSathi landing page', () => {
     expect(screen.getByText(/Built for safer campuses/i)).toBeInTheDocument()
     expect(screen.getByText(/Pause\. Verify\. Protect\./i)).toBeInTheDocument()
     expect(screen.getByText('Kunal S. Zarodiya')).toBeInTheDocument()
-    expect(screen.getByText('@kunal_zarodiya')).toBeInTheDocument()
+    expect(screen.getByText('@kunal.sysx')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /follow kunal s\. zarodiya on instagram/i })).toHaveAttribute(
       'href',
-      'https://www.instagram.com/kunal_zarodiya?igsi=MXJraHB6aGkxM2x6dw==',
+      'https://www.instagram.com/kunal.sysx',
     )
     expect(screen.getByRole('link', { name: /follow kunal s\. zarodiya on instagram/i })).toHaveAttribute('target', '_blank')
     expect(screen.getByRole('link', { name: /follow kunal s\. zarodiya on instagram/i })).toHaveAttribute('rel', 'noopener noreferrer')

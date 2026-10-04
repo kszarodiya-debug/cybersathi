@@ -4,7 +4,7 @@
 
 Project owner: **Kunal Sanjay Zarodiya**
 
-Follow the project owner on [Instagram](https://www.instagram.com/kunal_zarodiya?igsi=MXJraHB6aGkxM2x6dw==).
+Follow the project owner on [Instagram](https://www.instagram.com/kunal.sysx).
 
 CyberSathi is a college-focused cybersecurity awareness platform for students, faculty, and administrators. It combines practical learning, defensive analysis tools, quizzes, incident reporting, awareness scoring, and a safety-bounded AI assistant.
 

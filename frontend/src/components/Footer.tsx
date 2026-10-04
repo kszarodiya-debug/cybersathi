@@ -19,7 +19,7 @@ export function Footer() {
           <p className="mt-3 text-lg font-black tracking-tight text-white drop-shadow-[0_0_14px_rgba(246,183,60,0.2)]">Kunal S. Zarodiya</p>
           <a
             className="group relative mt-5 flex min-h-24 w-full min-w-0 items-center gap-4 overflow-hidden rounded-2xl border border-fuchsia-300/30 bg-gradient-to-br from-fuchsia-500/20 via-rose-500/10 to-amber-300/10 p-4 text-left transition duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:border-fuchsia-200/75 hover:shadow-[0_0_32px_rgba(236,72,153,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
-            href="https://www.instagram.com/kunal_zarodiya?igsi=MXJraHB6aGkxM2x6dw=="
+            href="https://www.instagram.com/kunal.sysx"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Follow Kunal S. Zarodiya on Instagram"
@@ -33,7 +33,7 @@ export function Footer() {
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-black text-white">Follow Me on Instagram</span>
-              <span className="mt-1 block truncate text-xs font-semibold text-white/70">@kunal_zarodiya</span>
+              <span className="mt-1 block truncate text-xs font-semibold text-white/70">@kunal.sysx</span>
               <span className="mt-2 block text-xs font-bold text-signal transition group-hover:text-white">Connect with me <span aria-hidden="true">↗</span></span>
             </span>
           </a>
